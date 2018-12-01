@@ -18,6 +18,7 @@ const ctx = myCanvas.getContext("2d");
     this.y = 220;
     this.width = 100;
     this.height = 100;
+    this.isCrashed = false;
     this.image = 'images/floppybird.png'
   }
 
@@ -35,7 +36,7 @@ const ctx = myCanvas.getContext("2d");
     // }
 
     
-    // floppyImg.onload = () => {
+    // floppyImg.onload = () => { //commented out later because ".onload" is only when you do not have loops.
       // console.log("inner this: ", this);
       ctx.drawImage(floppyImg, this.x, this.y, this.width, this.height);
     // }
@@ -66,22 +67,48 @@ function Obstacle(theX, theY, theWidth, theHeight){
   this.y = theY;
   this.width = theWidth;
   this.height = theHeight;
+  this.isTouched = false;
 
+}
+
+Obstacle.prototype.drawObstacle = function(){
+  
+    if(currentGame.floppy.isCrashed === false){
+      this.x -= 2;
+      if(this.x < -this.width){ // "-" because it's once the image is on negative side of width
+        this.x = 1000;  
+    }
+  }
+  if(this.isTouched){
+    ctx.fillStyle = "red";
+  } else {
+    ctx.fillStyle = "green";
+  }
+  ctx.fillRect(this.x, this.y, this.width, this.height);
 }
 
 
   // function Game(){
   //   // is the same as above function
   // }
+
 // global variables 
 let currentGame;
 let currentFloppy;
 
   function startGame(){
     currentGame = new Game();
-    // console.log(" = = = ", currentGame);
     currentFloppy = new Floppy();
     currentGame.floppy = currentFloppy;
+    // console.log(" = = = ", currentGame);
+    currentGame.obstacles = [
+      new Obstacle(650, 0, 30, 250),
+      new Obstacle(800, 350, 30, 200),
+      new Obstacle(970, 0, 30, 250),
+      new Obstacle(1120, 300, 30, 250),
+      new Obstacle(1270, 0, 45, 200)
+    ];
+    // console.log(currentGame);
     drawingLoop();
 
   }
@@ -93,6 +120,14 @@ let currentFloppy;
 
   function drawEverything(){
     currentGame.floppy.draw();
+    currentGame.obstacles.forEach((oneObstacle) => {
+      oneObstacle.drawObstacle();
+      if(checkCollision(currentGame.floppy, oneObstacle)){
+        currentGame.floppy.isCrashed = true;
+        oneObstacle.isTouched = true;
+        gameOver();
+      }
+    });
   }
 
   function drawingLoop(){
@@ -103,4 +138,19 @@ let currentFloppy;
     })
   }
 
-  startGame();
+function checkCollision(obj1, obj2){
+  return obj1.y + obj1.height - 10 >= obj2.y
+  && obj1.y <= obj2.y + obj2.height
+  && obj1.x + obj1.width - 10 >= obj2.x
+  && obj1.x >= obj2.x + obj2.width
+}
+
+function gameOver(){
+  ctx.font = "bold 70px Arial";
+  ctx.fillStyle = "orange";
+  ctx.fillText("GAME OVER", 420, 220);
+
+}
+
+
+startGame();
